@@ -1,0 +1,43 @@
+﻿@* En üstte bu sayfanın hangi veri modeliyle çalışacağını söylüyoruz *@
+@model List<Entities.Concrete.Product>
+
+@{
+    // Bu sayfanın başlığı
+    ViewData["Title"] = "Ürün Kataloğu";
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-uppercase fw-bold text-dark">Katalog</h2>
+    </div>
+
+    <div class="row">
+        @* C# döngüsü başlıyor! Gelen her ürün için bir HTML kartı basılacak *@
+        @foreach (var item in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <!-- Kurumsal, keskin hatlı ve gölgeli (shadow-sm) tasarım -->
+                <div class="card h-100 shadow-sm border-0 rounded-0 bg-light">
+                    <!-- Ürün Görseli -->
+                    <img src="@item.ImageUrl" class="card-img-top rounded-0" alt="@item.Name" style="height: 200px; object-fit: cover;">
+
+                    <div class="card-body text-center">
+                        <h5 class="card-title fw-bold text-dark">@item.Name</h5>
+                        <p class="card-text text-muted small">Stok: @item.Stock Adet</p>
+
+                        <!-- Fiyatı C (Currency - Para Birimi) formatında yazdırıyoruz -->
+                        <h4 class="text-primary fw-bold mb-3">@item.Price.ToString("C")</h4>
+
+                        <!-- Sepete Ekle Butonu -->
+                        <form action="/Cart/Add" method="post">
+                            <input type="hidden" name="productId" value="@item.Id" />
+                            <button type="submit" class="btn btn-dark w-100 rounded-0 text-uppercase fw-bold">
+                                Sepete Ekle
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

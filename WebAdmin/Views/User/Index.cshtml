@@ -1,0 +1,37 @@
+﻿@model List<Entities.Concrete.User>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-uppercase">Kullanıcı Yönetimi</h3>
+        <a href="/User/Create" class="btn btn-dark rounded-0 fw-bold">+ Yeni Kullanıcı</a>
+    </div>
+
+    <table class="table table-hover table-bordered mb-0 shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Ad Soyad</th>
+                <th>E-Posta</th>
+                <th>Yetki</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td class="align-middle">@user.FullName</td>
+                    <td class="align-middle">@user.Email</td>
+                    <td class="align-middle fw-bold">
+                        @if (user.Role == "Admin")
+                        {
+                            <span class="badge bg-danger rounded-0 px-3 py-2">YÖNETİCİ</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary rounded-0 px-3 py-2">MÜŞTERİ</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
