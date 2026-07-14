@@ -10,27 +10,46 @@
     <link rel="stylesheet" href="~/WebUI.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WebUI</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+    @using Microsoft.AspNetCore.Http
+@{
+        // Hafızadan kullanıcı bilgilerini okuyoruz
+        var userFullName = Context.Session.GetString("CurrentUserFullName");
+        var userRole = Context.Session.GetString("CurrentUserRole");
+    }
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/Product/Index">B2B Müşteri Paneli</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#customerNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="customerNav">
+                <!-- Sol Taraf: Sayfa Linkleri -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Product/Index">Ürün Kataloğu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Cart/Index">Sepetim ve Siparişlerim</a>
+                    </li>
+                </ul>
+
+                <!-- Sağ Taraf: Kullanıcı Bilgileri ve Çıkış -->
+                @if (!string.IsNullOrEmpty(userFullName))
+                {
+                    <div class="d-flex align-items-center">
+                        <div class="text-light me-3 text-end">
+                            <div class="fw-bold">@userFullName</div>
+                            <small class="badge bg-secondary">@userRole</small>
+                        </div>
+                        <a href="/Auth/Logout" class="btn btn-outline-danger btn-sm rounded-0">Çıkış Yap</a>
+                    </div>
+                }
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

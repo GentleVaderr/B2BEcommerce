@@ -1,0 +1,38 @@
+﻿@model Entities.Concrete.User
+@{
+    ViewData["Title"] = "Kullanıcı Yetkisi Değiştir";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-sm border-0 rounded-0" style="max-width: 500px; margin: 0 auto;">
+        <div class="card-header bg-primary text-white rounded-0">
+            <h5 class="mb-0 fw-bold">Yetki Düzenleme</h5>
+        </div>
+        <div class="card-body bg-light">
+            <form asp-controller="User" asp-action="EditRole" method="post">
+                <!-- Arka planda kimliği tutuyoruz -->
+                <input type="hidden" asp-for="Id" />
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Kullanıcı:</label>
+                    <input type="text" class="form-control rounded-0" value="@Model.FullName" disabled />
+                    <small class="text-muted">Kullanıcının adı güvenlik amacıyla buradan değiştirilemez.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-danger">Hesap Türü (Yetki)</label>
+                    <select asp-for="Role" class="form-select rounded-0 border-primary">
+                        <!-- Veritabanında rollerini nasıl adlandırdıysan value kısımları o olmalı -->
+                        <option value="Customer">Müşteri (Customer)</option>
+                        <option value="Admin">Yönetici (Admin)</option>
+                    </select>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="/User/Index" class="btn btn-outline-dark rounded-0 px-3">İptal</a>
+                    <button type="submit" class="btn btn-success rounded-0 px-4 fw-bold">Yetkiyi Güncelle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

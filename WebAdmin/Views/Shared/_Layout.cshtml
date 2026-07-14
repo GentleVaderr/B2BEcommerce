@@ -10,27 +10,46 @@
     <link rel="stylesheet" href="~/WebAdmin.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">WebAdmin</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    @using Microsoft.AspNetCore.Http
+@{
+        // Admin tarafındaki Session'dan bilgileri okuma
+        var adminFullName = Context.Session.GetString("CurrentUserFullName") ?? "Yönetici";
+        var adminRole = Context.Session.GetString("CurrentUserRole") ?? "Admin";
+    }
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/Order/Index">B2B Yönetim Paneli</a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="adminNav">
+                <!-- Sol Taraf: Sayfa Linkleri -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link fw-bold" href="/Order/Index">Sipariş Yönetimi</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/product/index">Ürün Yönetimi</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/index">Kullanıcı Yönetimi</a>
+                    </li>
+                </ul>
+
+                <!-- Sağ Taraf: Kullanıcı Bilgileri ve Çıkış -->
+                <div class="d-flex align-items-center">
+                    <div class="text-dark me-3 text-end">
+                        <div class="fw-bold">@adminFullName</div>
+                        <small class="badge bg-primary">@adminRole</small>
+                    </div>
+                    <a href="/Auth/Logout" class="btn btn-danger btn-sm rounded-0">Çıkış Yap</a>
                 </div>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

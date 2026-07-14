@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using WebUI.Filters;
 using WebUI.Models;
 
 namespace WebUI.Controllers
 {
+    [CustomerAuth]
     public class HomeController : Controller
     {
         public IActionResult Index()

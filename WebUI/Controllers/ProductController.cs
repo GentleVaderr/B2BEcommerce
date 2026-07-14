@@ -1,8 +1,10 @@
 ﻿using Business.Abstract;
 using Microsoft.AspNetCore.Mvc;
+using WebUI.Filters;
 
 namespace WebUI.Controllers
 {
+    [CustomerAuth]
     public class ProductController : Controller
     {
         private readonly IProductService _productService;

@@ -34,8 +34,14 @@
                             <td class="align-middle text-success fw-bold">@item.Price.ToString("C")</td>
                             <td class="align-middle">@item.Stock Adet</td>
                             <td class="align-middle text-center">
-                                <a href="#" class="btn btn-sm btn-outline-primary rounded-0">Düzenle</a>
-                                <a href="/Product/Delete/@item.Id" class="btn btn-sm btn-danger rounded-0">Sil</a>
+                                <a asp-controller="Product" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm rounded-0 fw-bold">
+                                    Düzenle
+                                </a>
+                                <a asp-controller="Product" asp-action="Delete" asp-route-id="@item.Id"
+                                   class="btn btn-danger btn-sm rounded-0 fw-bold ms-1"
+                                   onclick="return confirm('Bu ürünü tamamen silmek istediğinize emin misiniz?');">
+                                    Kaldır
+                                </a>
                             </td>
                         </tr>
                     }

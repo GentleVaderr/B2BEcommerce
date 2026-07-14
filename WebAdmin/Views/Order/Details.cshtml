@@ -1,0 +1,75 @@
+﻿@model Entities.Concrete.Order
+@{
+    ViewData["Title"] = "Sipariş Detayları";
+    var details = ViewBag.OrderDetails as List<Entities.Concrete.OrderDetail>;
+}
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Sipariş <span class="text-primary">#@Model.Id</span> Detayları</h3>
+        <a href="/Order/Index" class="btn btn-outline-dark rounded-0 px-4">Listeye Dön</a>
+    </div>
+
+    <div class="row">
+        <!-- Sol Taraf: Sipariş Özeti -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-0 h-100">
+                <div class="card-header bg-dark text-white rounded-0">
+                    <h5 class="mb-0">Sipariş Özeti</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <p><strong>Müşteri ID:</strong> @Model.UserId</p>
+                    <p><strong>Tarih:</strong> @Model.OrderDate.ToString("dd.MM.yyyy HH:mm")</p>
+                    <p><strong>Durum:</strong> <span class="badge bg-secondary text-white rounded-0 px-2 py-1">@Model.Status</span></p>
+                    <hr />
+                    <h4 class="fw-bold text-success mb-0">Genel Toplam: @Model.TotalPrice.ToString("C")</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Taraf: Satın Alınan Ürünler -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-0">
+                <div class="card-header bg-primary text-white rounded-0">
+                    <h5 class="mb-0">Satın Alınan Ürünler</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ürün Adı</th>
+                                <th>Birim Fiyat</th>
+                                <th>Adet</th>
+                                <th>Ara Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (details != null && details.Count > 0)
+                            {
+                                foreach (var item in details)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@item.ProductName</td>
+                                        <td>@item.UnitPrice.ToString("C")</td>
+                                        <td>@item.Quantity</td>
+                                        <td class="fw-bold text-success">
+                                            @((item.UnitPrice * item.Quantity).ToString("C"))
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        Bu siparişe ait ürün detayı bulunamadı. (Eski siparişler detay tablosuna kaydedilmemiş olabilir).
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

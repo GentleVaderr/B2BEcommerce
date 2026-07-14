@@ -7,15 +7,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession();
 
 //Dependincy Injection
 builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
+builder.Services.AddScoped<IOrderDetailService, OrderDetailManager>();
 
 builder.Services.AddScoped<IOrderDal, EfOrderDal>();
 builder.Services.AddScoped<IProductDal, EfProductDal>();
 builder.Services.AddScoped<IUserDal, EfUserDal>();
+builder.Services.AddScoped<IOrderDetailDal, EfOrderDetailDal>();
 
 var app = builder.Build();
 
@@ -29,6 +32,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthorization();
 

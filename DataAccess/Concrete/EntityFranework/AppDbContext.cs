@@ -13,6 +13,7 @@ namespace DataAccess.Concrete.EntityFranework
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<OrderDetail> OrderDetails { get; set; }
 
         //Veritabanı Bağlantı Yolu
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

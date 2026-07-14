@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using WebAdmin.Filters;
 using WebAdmin.Models;
 
 namespace WebAdmin.Controllers
 {
+    [AdminAuth]
     public class HomeController : Controller
     {
+        
         public IActionResult Index()
         {
             return View();

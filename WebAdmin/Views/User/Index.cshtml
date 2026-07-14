@@ -12,6 +12,7 @@
                 <th>Ad Soyad</th>
                 <th>E-Posta</th>
                 <th>Yetki</th>
+                <th>Yonet</th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +30,19 @@
                         {
                             <span class="badge bg-secondary rounded-0 px-3 py-2">MÜŞTERİ</span>
                         }
+                    </td>
+                    <td class="align-middle text-center">
+                        <!-- Yetki Değiştirme Butonu -->
+                        <a asp-controller="User" asp-action="EditRole" asp-route-id="@user.Id" class="btn btn-primary btn-sm rounded-0 fw-bold">
+                            Yetki Değiştir
+                        </a>
+
+                        <!-- Kullanıcı Silme Butonu -->
+                        <a asp-controller="User" asp-action="Delete" asp-route-id="@user.Id"
+                           class="btn btn-danger btn-sm rounded-0 fw-bold ms-1"
+                           onclick="return confirm('Bu kullanıcıyı sistemden tamamen silmek istediğinize emin misiniz?');">
+                            Kaldır
+                        </a>
                     </td>
                 </tr>
             }

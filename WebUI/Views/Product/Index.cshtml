@@ -29,9 +29,17 @@
                         <h4 class="text-primary fw-bold mb-3">@item.Price.ToString("C")</h4>
 
                         <!-- Sepete Ekle Butonu -->
-                        <form action="/Cart/Add" method="post">
+                        <!-- Ürünün ID'sini arka plana gönderecek olan Form -->
+                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="w-100">
+
+                            <!-- Kullanıcının görmediği ama arka plana gidecek olan Ürün ID'si -->
                             <input type="hidden" name="productId" value="@item.Id" />
-                            <button type="submit" class="btn btn-dark w-100 rounded-0 text-uppercase fw-bold">
+
+                            <!-- Varsayılan olarak 1 adet ekleneceğini belirtiyoruz -->
+                            <input type="hidden" name="quantity" value="1" />
+
+                            <!-- Butonun kendisi (Kendi tasarımındaki CSS sınıflarını (class) koruyabilirsin) -->
+                            <button type="submit" class="btn btn-dark rounded-0 w-100 fw-bold">
                                 Sepete Ekle
                             </button>
                         </form>
