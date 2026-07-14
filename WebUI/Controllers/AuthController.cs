@@ -29,8 +29,6 @@ namespace WebUI.Controllers
             if (user != null)
             {
                 HttpContext.Session.SetInt32("CurrentUserId", user.Id);
-
-                // Kullanıcının adını, soyadını ve rolünü hafızaya alıyoruz
                 HttpContext.Session.SetString("CurrentUserFullName", $"{user.FullName}");
                 HttpContext.Session.SetString("CurrentUserRole", user.Role);
 

@@ -13,11 +13,13 @@ builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<IOrderDetailService, OrderDetailManager>();
+builder.Services.AddScoped<ICartItemService, CartItemManager>();
 
 builder.Services.AddScoped<IOrderDal, EfOrderDal>();
 builder.Services.AddScoped<IProductDal, EfProductDal>();
 builder.Services.AddScoped<IUserDal, EfUserDal>();
 builder.Services.AddScoped<IOrderDetailDal, EfOrderDetailDal>();
+builder.Services.AddScoped<ICartItemDal, EfCartItemDal>();
 
 builder.Services.AddSession();
 

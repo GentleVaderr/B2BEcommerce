@@ -1,4 +1,4 @@
-﻿@model List<WebUI.Models.CartItems>
+﻿@model List<Entities.Concrete.FrontEnd.CartItem>
 
 @{
     ViewData["Title"] = "Sepetim ve Siparişlerim";
@@ -52,7 +52,9 @@
                                 <td>@item.Quantity</td>
                                 <td class="text-success fw-bold">@item.TotalPrice.ToString("C")</td>
                                 <td>
-                                    <a href="/Cart/RemoveFromCart?productId=@item.ProductId" class="btn btn-sm btn-danger rounded-0">Sil</a>
+                                    <a asp-controller="Cart" asp-action="RemoveFromCart" asp-route-id="@item.Id" class="btn btn-danger btn-sm rounded-0">
+                                        Sil
+                                    </a>
                                 </td>
                             </tr>
                         }

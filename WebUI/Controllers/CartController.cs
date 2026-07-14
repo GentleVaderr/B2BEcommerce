@@ -1,122 +1,123 @@
 ﻿using Business.Abstract;
+using Entities.Concrete;
+using Entities.Concrete.FrontEnd;
 using Microsoft.AspNetCore.Mvc;
-using WebUI.Extensions;
 using WebUI.Filters;
-using WebUI.Models;
 
 namespace WebUI.Controllers
 {
-    [CustomerAuth]
+    [CustomerAuth] // Müşteri girişi zorunlu
     public class CartController : Controller
     {
-        private readonly IProductService _productService;
+        private readonly ICartItemService _cartItemService;
         private readonly IOrderService _orderService;
         private readonly IOrderDetailService _orderDetailService;
+        private readonly IProductService _productService;
 
-        public CartController(IProductService productService, IOrderService orderService, IOrderDetailService orderDetailService)
+        public CartController(ICartItemService cartItemService, IOrderService orderService, IOrderDetailService orderDetailService, IProductService productService)
         {
-            _productService = productService;
+            _cartItemService = cartItemService;
             _orderService = orderService;
             _orderDetailService = orderDetailService;
+            _productService = productService;
         }
 
-        // 1. SEPET VE SİPARİŞLERİ GÖRÜNTÜLEME
+        // 1. SEPETİ GÖRÜNTÜLEME
         public IActionResult Index()
         {
-            var cart = HttpContext.Session.GetJson<List<CartItems>>("Cart") ?? new List<CartItems>();
-
-            // Hafızadaki kullanıcı ID'sini alıyoruz. Eğer yoksa (giriş yapmamışsa) 0 dönecek.
             int currentUserId = HttpContext.Session.GetInt32("CurrentUserId") ?? 0;
 
-            // Güvenlik: Eğer kullanıcı giriş yapmamışsa doğrudan Login sayfasına at!
-            if (currentUserId == 0) return RedirectToAction("Login", "Auth");
+            // Sadece giriş yapan kullanıcının veritabanındaki sepet ürünlerini getiriyoruz
+            var userCartItems = _cartItemService.GetAll().Where(c => c.UserId == currentUserId).ToList();
 
-            // Artık kullanıcının kendi siparişlerini getiriyoruz
-            ViewBag.MyOrders = _orderService.GetAll().Where(o => o.UserId == currentUserId).ToList();
-
-            return View(cart);
+            return View(userCartItems);
         }
 
-        // 2. SEPETE ÜRÜN EKLEME
-        [HttpPost]
-        public IActionResult AddToCart(int productId, int quantity = 1)
+        // 2. SEPETE ÜRÜN EKLEME 
+        public IActionResult AddToCart(int productId)
         {
-            var product = _productService.GetAll().FirstOrDefault(p => p.Id == productId);
-            if (product == null) return NotFound();
+            int currentUserId = HttpContext.Session.GetInt32("CurrentUserId") ?? 0;
 
-            var cart = HttpContext.Session.GetJson<List<CartItems>>("Cart") ?? new List<CartItems>();
-            var existingItem = cart.FirstOrDefault(c => c.ProductId == productId);
+            var product = _productService.GetAll().FirstOrDefault(p => p.Id == productId);
+
+            if (product == null)
+            {
+                return NotFound(); 
+            }
+
+            var existingItem = _cartItemService.GetAll()
+                                .FirstOrDefault(c => c.UserId == currentUserId && c.ProductId == productId);
 
             if (existingItem != null)
             {
-                existingItem.Quantity += quantity; // Ürün zaten varsa adedini artır
+                existingItem.Quantity += 1;
+                _cartItemService.Update(existingItem);
             }
             else
             {
-                cart.Add(new CartItems // Yoksa yeni ürün olarak ekle
+                var newCartItem = new CartItem
                 {
-                    ProductId = product.Id,
-                    ProductName = product.Name,
-                    Price = product.Price,
+                    UserId = currentUserId,
+                    ProductId = productId,
+                    ProductName = product.Name,      
+                    Price = product.Price,           
                     ImageUrl = product.ImageUrl,
-                    Quantity = quantity
-                });
+                    Quantity = 1
+                };
+                _cartItemService.Add(newCartItem);
             }
 
-            HttpContext.Session.SetJson("Cart", cart); // Güncel sepeti tekrar Session'a kaydet
-            return RedirectToAction("Index", "Product"); // Ürünler sayfasına geri dön
+            return RedirectToAction("Index");
         }
 
-        // 3. SEPETTEN ÜRÜN ÇIKARMA
-        public IActionResult RemoveFromCart(int productId)
-        {
-            var cart = HttpContext.Session.GetJson<List<CartItems>>("Cart") ?? new List<CartItems>();
-            var itemToRemove = cart.FirstOrDefault(c => c.ProductId == productId);
-
-            if (itemToRemove != null)
-            {
-                cart.Remove(itemToRemove);
-                HttpContext.Session.SetJson("Cart", cart);
-            }
-
-            return RedirectToAction("Index"); // Sepet sayfasına geri dön
-        }
-
-        // 4. SİPARİŞİ ONAYLAMA VE VERİTABANINA KAYDETME
+        // 3. SİPARİŞİ ONAYLAMA
         [HttpPost]
         public IActionResult CompleteOrder()
         {
-            var cart = HttpContext.Session.GetJson<List<CartItems>>("Cart") ?? new List<CartItems>();
-            if (cart.Count == 0) return RedirectToAction("Index");
-
             int currentUserId = HttpContext.Session.GetInt32("CurrentUserId") ?? 0;
-            if (currentUserId == 0) return RedirectToAction("Login", "Auth");
 
-            // 1. Ana Siparişi Kaydet
-            var newOrder = new Entities.Concrete.Order
+            // Kullanıcının sepetindeki ürünleri veritabanından çek
+            var cartItems = _cartItemService.GetAll().Where(c => c.UserId == currentUserId).ToList();
+            if (cartItems.Count == 0) return RedirectToAction("Index");
+
+            // Ana Siparişi Kaydet
+            var newOrder = new Order
             {
                 UserId = currentUserId,
                 OrderDate = DateTime.Now,
                 Status = "Bekliyor",
-                TotalPrice = cart.Sum(c => c.TotalPrice)
+                TotalPrice = cartItems.Sum(c => c.TotalPrice)
             };
             _orderService.Add(newOrder);
 
-            // 2. Sepetteki Ürünleri OrderDetail Olarak Kaydet
-            foreach (var item in cart)
+            // Sepetteki Ürünleri OrderDetail Olarak Kaydet
+            foreach (var item in cartItems)
             {
-                var orderDetail = new Entities.Concrete.OrderDetail
+                var orderDetail = new OrderDetail
                 {
-                    OrderId = newOrder.Id, // Ana siparişin ID'si ile birbirine bağlıyoruz
+                    OrderId = newOrder.Id,
                     ProductId = item.ProductId,
                     ProductName = item.ProductName,
                     UnitPrice = item.Price,
                     Quantity = item.Quantity
                 };
                 _orderDetailService.Add(orderDetail);
+
+                // Siparişe dönüştürülen ürünü müşterinin sepet tablosundan siliyoruz
+                _cartItemService.Delete(item);
             }
 
-            HttpContext.Session.Remove("Cart");
+            return RedirectToAction("Index");
+        }
+
+        // 4. SEPETTEN ÜRÜN SİLME
+        public IActionResult RemoveFromCart(int id)
+        {
+            var item = _cartItemService.GetAll().FirstOrDefault(c => c.Id == id);
+            if (item != null)
+            {
+                _cartItemService.Delete(item);
+            }
             return RedirectToAction("Index");
         }
     }

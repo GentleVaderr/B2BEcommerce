@@ -37,7 +37,6 @@ namespace WebUI.Controllers
             // İleride burada ModelState doğrulaması yapılabilir
             _productService.Add(product);
 
-            // Ürün başarıyla eklenince, kullanıcıyı tekrar liste sayfasına (Index) gönderiyoruz.
             return RedirectToAction("Index");
         }
 
@@ -45,39 +44,34 @@ namespace WebUI.Controllers
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            // ID'sine göre ilgili ürünü veritabanından çekiyoruz
+            // ID'sine göre ilgili ürünü veritabanından çekme
             var product = _productService.GetAll().FirstOrDefault(p => p.Id == id);
 
             if (product == null)
             {
-                return NotFound(); // Eğer ürün yoksa hata sayfasına yönlendir
+                return NotFound();
             }
 
-            return View(product); // Ürünü bulduk, içindeki bilgilerle birlikte görünüme gönderiyoruz
+            return View(product);
         }
 
         // 2. AŞAMA: Formdan gelen güncel bilgileri veritabanına kaydeden metot (Güncelleme)
         [HttpPost]
         public IActionResult Edit(Entities.Concrete.Product product)
         {
-            // Ürünü güncelliyoruz
             _productService.Update(product);
 
-            // İşlem bitince ürünler listesine geri dönüyoruz
             return RedirectToAction("Index");
         }
         public IActionResult Delete(int id)
         {
-            // 1. Silinecek ürünü veritabanından buluyoruz
             var product = _productService.GetAll().FirstOrDefault(p => p.Id == id);
 
-            // 2. Eğer böyle bir ürün varsa silme işlemini yapıyoruz
             if (product != null)
             {
                 _productService.Delete(product);
             }
 
-            // 3. İşlem bitince sayfayı yenilemek için listeye geri dönüyoruz
             return RedirectToAction("Index");
         }
     }

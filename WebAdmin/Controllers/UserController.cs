@@ -47,11 +47,10 @@ namespace WebAdmin.Controllers
 
             if (user != null)
             {
-                // Güvenlik Önlemi: Kendi kendini silmeyi engellemek iyi bir fikirdir :)
+                // Güvenlik Önlemi: Kendi kendini silmeyi engelleme
                 var currentAdminId = HttpContext.Session.GetInt32("CurrentUserId");
                 if (user.Id == currentAdminId)
                 {
-                    // İstersen buraya bir ViewBag.Error mesajı ekleyebilirsin
                     return RedirectToAction("Index");
                 }
 
@@ -79,10 +78,8 @@ namespace WebAdmin.Controllers
 
             if (existingUser != null)
             {
-                // Sadece yetki (Role) bilgisini formdan gelen yeni yetki ile değiştiriyoruz
                 existingUser.Role = user.Role;
 
-                // Değişikliği veritabanına kaydediyoruz
                 _userService.Update(existingUser);
             }
 
