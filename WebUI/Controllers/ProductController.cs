@@ -1,6 +1,7 @@
 ﻿using Business.Abstract;
 using Microsoft.AspNetCore.Mvc;
 using WebUI.Filters;
+using Entities.DTOs;
 
 namespace WebUI.Controllers
 {
@@ -16,8 +17,19 @@ namespace WebUI.Controllers
 
         public IActionResult Index()
         {
-            var products = _productService.GetAll();
-            return View(products);
+            var rawProducts = _productService.GetAll();
+
+            var productDto = rawProducts.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                ImageUrl = p.ImageUrl,
+                Stock = p.Stock
+
+            }).ToList();
+
+            return View(productDto);
         }
     }
 }

@@ -3,10 +3,11 @@ using Entities.Concrete;
 using Entities.Concrete.FrontEnd;
 using Microsoft.AspNetCore.Mvc;
 using WebUI.Filters;
+using Entities.DTOs;
 
 namespace WebUI.Controllers
 {
-    [CustomerAuth] // Müşteri girişi zorunlu
+    [CustomerAuth]
     public class CartController : Controller
     {
         private readonly ICartItemService _cartItemService;
@@ -30,7 +31,13 @@ namespace WebUI.Controllers
             // Sadece giriş yapan kullanıcının veritabanındaki sepet ürünlerini getiriyoruz
             var userCartItems = _cartItemService.GetAll().Where(c => c.UserId == currentUserId).ToList();
 
-            return View(userCartItems);
+            var cartDto = new CartDto
+            {
+                CartItems = userCartItems,
+                CartTotalAmount = userCartItems.Sum(c => c.TotalPrice)
+            };
+
+            return View(cartDto);
         }
 
         // 2. SEPETE ÜRÜN EKLEME 
