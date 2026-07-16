@@ -1,4 +1,5 @@
 ﻿using Business.Abstract;
+using Entities.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using WebAdmin.Filters;
 
@@ -10,11 +11,13 @@ namespace WebAdmin.Controllers
 
         private readonly IOrderService _orderService;
         private readonly IOrderDetailService _orderDetailService;
+        private readonly IProductService _productService;
 
-        public OrderController(IOrderService orderService, IOrderDetailService orderDetailService)
+        public OrderController(IOrderService orderService, IOrderDetailService orderDetailService, IProductService productService)
         {
             _orderService = orderService;
             _orderDetailService = orderDetailService;
+            _productService = productService;
         }
 
         // Siparişleri Listeleme Sayfası
@@ -40,15 +43,35 @@ namespace WebAdmin.Controllers
 
         public IActionResult Details(int id)
         {
-            // Ana siparişi bul
-            var order = _orderService.GetAll().FirstOrDefault(o => o.Id == id);
-            if (order == null) return NotFound();
+            var mainOrder = _orderService.GetById(id);
+            if (mainOrder == null) return NotFound();
+            var orderDetails = _orderDetailService.GetAll().Where(d => d.OrderId == id).ToList();
+            var allProducts = _productService.GetAll();
 
-            // Bu siparişe ait ürün listesini bul
-            var orderDetails = _orderDetailService.GetAll().Where(od => od.OrderId == id).ToList();
+            var summaryDto = new OrderSummaryDto
+            {
+                Id = mainOrder.Id,
+                UserId = mainOrder.UserId,
+                OrderDate = mainOrder.OrderDate,
+                Status = mainOrder.Status,
+                TotalPrice = mainOrder.TotalPrice,
+            };
 
-            ViewBag.OrderDetails = orderDetails; // Görünüme taşı
-            return View(order);
+            foreach (var item in orderDetails)
+            {
+                var currentProduct = allProducts.FirstOrDefault(p => p.Id == item.ProductId);
+                if (currentProduct != null)
+                {
+                    summaryDto.OrderDetails.Add(new OrderDetailDto
+                    {
+                        ProductName = currentProduct.Name,
+                        UnitPrice = item.UnitPrice,
+                        Quantity = item.Quantity
+                    });
+                }
+            }
+
+            return View(summaryDto);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿@model Entities.Concrete.Order
+﻿@model Entities.DTOs.OrderSummaryDto
 @{
     ViewData["Title"] = "Sipariş Detayları";
     var details = ViewBag.OrderDetails as List<Entities.Concrete.OrderDetail>;
@@ -46,15 +46,13 @@
                         <tbody>
                             @if (details != null && details.Count > 0)
                             {
-                                foreach (var item in details)
+                                @foreach (var item in Model.OrderDetails)
                                 {
                                     <tr>
                                         <td class="fw-bold">@item.ProductName</td>
                                         <td>@item.UnitPrice.ToString("C")</td>
                                         <td>@item.Quantity</td>
-                                        <td class="fw-bold text-success">
-                                            @((item.UnitPrice * item.Quantity).ToString("C"))
-                                        </td>
+                                        <td class="fw-bold text-success">@item.TotalPrice.ToString("C")</td>
                                     </tr>
                                 }
                             }

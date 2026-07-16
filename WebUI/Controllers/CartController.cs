@@ -129,7 +129,6 @@ namespace WebUI.Controllers
                     {
                         OrderId = newOrder.Id,
                         ProductId = item.ProductId,
-                        ProductName = product.Name,
                         UnitPrice = product.Price,
 
                         Quantity = item.Quantity

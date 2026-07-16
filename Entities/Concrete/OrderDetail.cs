@@ -10,8 +10,11 @@ namespace Entities.Concrete
         public int Id { get; set; }
         public int OrderId { get; set; } // Hangi siparişe ait?
         public int ProductId { get; set; } // Hangi ürün?
-        public string? ProductName { get; set; } // Kolay okumak için ürün adı
         public decimal UnitPrice { get; set; } // O anki fiyatı
         public int Quantity { get; set; } // Kaç adet alındı?
+        
+        //bağlama
+        public virtual Product? Product { get; set; }
+        public virtual Order? Order { get; set; }
     }
 }
