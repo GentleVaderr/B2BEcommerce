@@ -19,6 +19,7 @@ namespace WebUI.Controllers
         public IActionResult Index()
         {
             var products = _productService.GetAll();
+
             return View(products);
         }
 

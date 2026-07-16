@@ -15,6 +15,5 @@ namespace Entities.Concrete
 
         //Bağlantılar
         public User User { get; set; } = null!;
-        public List<OrderItem> OrderItems { get; set; } = new();
     }
 }

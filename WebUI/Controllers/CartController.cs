@@ -27,15 +27,31 @@ namespace WebUI.Controllers
         public IActionResult Index()
         {
             int currentUserId = HttpContext.Session.GetInt32("CurrentUserId") ?? 0;
-
-            // Sadece giriş yapan kullanıcının veritabanındaki sepet ürünlerini getiriyoruz
             var userCartItems = _cartItemService.GetAll().Where(c => c.UserId == currentUserId).ToList();
 
-            var cartDto = new CartDto
+            var cartDto = new CartDto();
+            cartDto.CartItems = new List<CartItemDto>();
+
+            var allProducts = _productService.GetAll();
+
+            foreach (var item in userCartItems)
             {
-                CartItems = userCartItems,
-                CartTotalAmount = userCartItems.Sum(c => c.TotalPrice)
-            };
+                var product = allProducts.FirstOrDefault(p => p.Id == item.ProductId);
+
+                if (product != null)
+                {
+                    cartDto.CartItems.Add(new CartItemDto
+                    {
+                        ProductId = product.Id,
+                        ProductName = product.Name,
+                        Price = product.Price, 
+                        Quantity = item.Quantity,
+                        ImageUrl = product.ImageUrl
+                    });
+                }
+            }
+
+            cartDto.CartTotalAmount = cartDto.CartItems.Sum(c => c.Price * c.Quantity);
 
             return View(cartDto);
         }
@@ -66,9 +82,6 @@ namespace WebUI.Controllers
                 {
                     UserId = currentUserId,
                     ProductId = productId,
-                    ProductName = product.Name,      
-                    Price = product.Price,           
-                    ImageUrl = product.ImageUrl,
                     Quantity = 1
                 };
                 _cartItemService.Add(newCartItem);
@@ -82,35 +95,48 @@ namespace WebUI.Controllers
         public IActionResult CompleteOrder()
         {
             int currentUserId = HttpContext.Session.GetInt32("CurrentUserId") ?? 0;
-
-            // Kullanıcının sepetindeki ürünleri veritabanından çek
             var cartItems = _cartItemService.GetAll().Where(c => c.UserId == currentUserId).ToList();
             if (cartItems.Count == 0) return RedirectToAction("Index");
 
-            // Ana Siparişi Kaydet
+            var allProducts = _productService.GetAll();
+
+            decimal totalOrderPrice = 0;
+            foreach (var item in cartItems)
+            {
+                var product = allProducts.FirstOrDefault(p => p.Id == item.ProductId);
+                if (product != null)
+                {
+                    totalOrderPrice += (product.Price * item.Quantity);
+                }
+            }
+
             var newOrder = new Order
             {
                 UserId = currentUserId,
                 OrderDate = DateTime.Now,
                 Status = "Bekliyor",
-                TotalPrice = cartItems.Sum(c => c.TotalPrice)
+                TotalPrice = totalOrderPrice
             };
             _orderService.Add(newOrder);
 
-            // Sepetteki Ürünleri OrderDetail Olarak Kaydet
             foreach (var item in cartItems)
             {
-                var orderDetail = new OrderDetail
-                {
-                    OrderId = newOrder.Id,
-                    ProductId = item.ProductId,
-                    ProductName = item.ProductName,
-                    UnitPrice = item.Price,
-                    Quantity = item.Quantity
-                };
-                _orderDetailService.Add(orderDetail);
+                var product = allProducts.FirstOrDefault(p => p.Id == item.ProductId);
 
-                // Siparişe dönüştürülen ürünü müşterinin sepet tablosundan siliyoruz
+                if (product != null)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = newOrder.Id,
+                        ProductId = item.ProductId,
+                        ProductName = product.Name,
+                        UnitPrice = product.Price,
+
+                        Quantity = item.Quantity
+                    };
+                    _orderDetailService.Add(orderDetail);
+                }
+
                 _cartItemService.Delete(item);
             }
 

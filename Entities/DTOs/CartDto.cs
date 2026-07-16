@@ -7,7 +7,7 @@ namespace Entities.DTOs
 {
     public class CartDto
     {
-        public List<CartItem>? CartItems { get; set; }
+        public List<CartItemDto>? CartItems { get; set; }
         public decimal CartTotalAmount { get; set; }
     }
 }
