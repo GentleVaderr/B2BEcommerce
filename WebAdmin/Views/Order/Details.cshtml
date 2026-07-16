@@ -44,7 +44,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (details != null && details.Count > 0)
+                            @if (Model.OrderDetails != null && Model.OrderDetails.Count > 0)
                             {
                                 @foreach (var item in Model.OrderDetails)
                                 {

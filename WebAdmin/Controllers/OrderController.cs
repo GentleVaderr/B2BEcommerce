@@ -23,9 +23,13 @@ namespace WebAdmin.Controllers
         // Siparişleri Listeleme Sayfası
         public IActionResult Index()
         {
-            var orders = _orderService.GetAll();
+            // Admin sayfasında kimin giriş yaptığına bakmıyoruz, TÜM siparişleri çekiyoruz
+            var allOrders = _orderService.GetAll()
+                                         .OrderByDescending(o => o.OrderDate)
+                                         .ToList();
 
-            return View(orders);
+            // Dolu listeyi Admin'in onaylama paneline gönderiyoruz
+            return View(allOrders);
         }
 
         [HttpPost]

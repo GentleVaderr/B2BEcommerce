@@ -52,6 +52,18 @@ namespace WebUI.Controllers
             }
 
             cartDto.CartTotalAmount = cartDto.CartItems.Sum(c => c.Price * c.Quantity);
+            // --- YENİ EKLENECEK KISIM BAŞLANGICI ---
+
+            // 1. Müşterinin siparişlerini veritabanından çekiyoruz
+            var customerOrders = _orderService.GetAll()
+                                              .Where(o => o.UserId == currentUserId)
+                                              .OrderByDescending(o => o.OrderDate)
+                                              .ToList();
+
+            // 2. View'ın 6. satırında beklediği ViewBag içerisine bu listeyi atıyoruz
+            ViewBag.MyOrders = customerOrders;
+
+            // --- YENİ EKLENECEK KISIM BİTİŞİ ---
 
             return View(cartDto);
         }
