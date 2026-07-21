@@ -8,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddHttpClient();
+
 //Dependency Injection
 builder.Services.AddScoped<IOrderService, OrderManager>();
 builder.Services.AddScoped<IProductService, ProductManager>();
