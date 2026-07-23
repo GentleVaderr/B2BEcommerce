@@ -1,3 +1,4 @@
+using Business.Abstract;
 using Entities.DTOs;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,14 @@ namespace WebUI.Controllers
     public class HomeController : Controller
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+        private readonly IGoogleAnalyticsService _gaService;
 
-        public HomeController(IHttpClientFactory httpClientFactory)
+        public HomeController(IHttpClientFactory httpClientFactory, IConfiguration configuration, IGoogleAnalyticsService gaService)
         {
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
+            _gaService = gaService;
         }
 
         public IActionResult Index()
@@ -30,47 +35,18 @@ namespace WebUI.Controllers
         [HttpPost]
         public async Task<IActionResult> TrackClick([FromBody] ButtonClickDto clickData)
         {
-            string clientId = Guid.NewGuid().ToString();
-            if (Request.Cookies.TryGetValue("_ga", out string? gaCookie))
-            {
-                var cookieParts = gaCookie.Split('.');
-                if (cookieParts.Length >= 4)
-                {
-                    clientId = $"{cookieParts[2]}.{cookieParts[3]}";
-                }
-            }
+            if (clickData == null) return BadRequest();
 
-            var ga4Payload = new
+            // GA4'e button_click olayını dinamik parametrelerle yolluyoruz
+            await _gaService.TrackEventAsync("button_click", new
             {
-                client_id = clientId,
-                events = new[]
-                {
-            new
-            {
-                name = "button_click",
-                @params = new
-                {
-                    debug_mode = 1,
-                    button_text = clickData.ButtonText,
-                    button_id = clickData.ButtonId,
-                    page_url = clickData.PageUrl
-                }
-            }
-        }
-            };
+                debug_mode = 1,
+                button_text = clickData.ButtonText,
+                button_id = clickData.ButtonId,
+                page_url = clickData.PageUrl
+            }, HttpContext);
 
-            string measurementId = "G-X8H3TG9MKJ"; // Kimliğin
-            string apiSecret = "ckq2ILLbQnmfSOn_9vrRQQ";       // Gizli anahtarın
-            string ga4Url = $"https://www.google-analytics.com/mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
-
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
-                await client.PostAsJsonAsync(ga4Url, ga4Payload);
-            }
-            catch (Exception) { /* Sessizce yut */ }
-
-            return Ok();
+            return Ok(); // JavaScript'e işlemin başarılı olduğunu bildiriyoruz
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -81,49 +57,12 @@ namespace WebUI.Controllers
             string errorMessage = exceptionHandlerPathFeature?.Error?.Message ?? "Bilinmeyen Hata";
             string errorPath = exceptionHandlerPathFeature?.Path ?? "Bilinmeyen Sayfa";
 
-            // --- GA4 EXCEPTION (HATA) ENTEGRASYONU BAŞLANGICI ---
-            string clientId = Guid.NewGuid().ToString();
-            if (Request.Cookies.TryGetValue("_ga", out string? gaCookie))
+            await _gaService.TrackEventAsync("exception", new
             {
-                var cookieParts = gaCookie.Split('.');
-                if (cookieParts.Length >= 4)
-                {
-                    clientId = $"{cookieParts[2]}.{cookieParts[3]}";
-                }
-            }
-
-            var ga4Payload = new
-            {
-                client_id = clientId,
-                events = new[]
-                {
-            new
-            {
-                name = "exception", // GA4'ün standart hata takip etkinliği
-                @params = new
-                {
-                    description = $"Yol: {errorPath} | Hata: {errorMessage}",
-                    fatal = 1 // 1 = Sistem hatası (Kullanıcının işini bölen kritik hata)
-                }
-            }
-        }
-            };
-
-            string measurementId = "G-X8H3TG9MKJ"; // Kendi kimliğini yaz
-            string apiSecret = "ckq2ILLbQnmfSOn_9vrRQQ";       // Kendi gizli anahtarını yaz
-
-            string ga4Url = $"https://www.google-analytics.com/mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
-
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
-                await client.PostAsJsonAsync(ga4Url, ga4Payload);
-            }
-            catch (Exception)
-            {
-                // Hata raporlama sisteminin kendisi patlarsa sessizce yutuyoruz :)
-            }
-            // --- GA4 ENTEGRASYONU BİTİŞİ ---
+                debug_mode = 1,
+                error_message = errorMessage,
+                error_path = errorPath
+            }, HttpContext);
 
             // Mevcut MVC Error View'ına yönlendirme (Senin kodunda farklı olabilir, onu koru)
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

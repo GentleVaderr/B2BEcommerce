@@ -16,14 +16,19 @@ namespace WebUI.Controllers
         private readonly IOrderDetailService _orderDetailService;
         private readonly IProductService _productService;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
+        private readonly IGoogleAnalyticsService _gaService;
 
-        public CartController(ICartItemService cartItemService, IOrderService orderService, IOrderDetailService orderDetailService, IProductService productService, IHttpClientFactory httpClientFactory)
+        public CartController(ICartItemService cartItemService, IOrderService orderService,
+            IOrderDetailService orderDetailService, IProductService productService, IHttpClientFactory httpClientFactory, IConfiguration configuration, IGoogleAnalyticsService gaService)
         {
             _cartItemService = cartItemService;
             _orderService = orderService;
             _orderDetailService = orderDetailService;
             _productService = productService;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
+            _gaService = gaService;
         }
 
         // 1. SEPETİ GÖRÜNTÜLEME
@@ -60,61 +65,39 @@ namespace WebUI.Controllers
                                               .OrderByDescending(o => o.OrderDate)
                                               .ToList();
             ViewBag.MyOrders = customerOrders;
-            // --- GA4 VIEW_CART ENTEGRASYONU BAŞLANGICI ---
-            string clientId = Guid.NewGuid().ToString();
-            if (Request.Cookies.TryGetValue("_ga", out string? gaCookie))
-            {
-                var cookieParts = gaCookie.Split('.');
-                if (cookieParts.Length >= 4)
+            
+            await _gaService.TrackEventAsync("view_cart", new 
+            { 
+                debug_mode = 1,
+                currency = "TRY",
+                cart_total_amount = cartDto.CartTotalAmount,
+                items = cartDto.CartItems.Select((item, i) => new
                 {
-                    clientId = $"{cookieParts[2]}.{cookieParts[3]}";
-                }
-            }
+                    item_id = item.ProductId.ToString(),
+                    item_name = item.ProductName,
+                    price = item.Price,
+                    quantity = item.Quantity,
+                    index = i,
 
-            // Sadece sepet boş değilse GA4'e veri gönderelim
-            if (cartDto.CartItems != null && cartDto.CartItems.Any())
-            {
-                var ga4Payload = new
-                {
-                    client_id = clientId,
-                    events = new[]
-                    {
-            new
-            {
-                name = "view_cart", // Etkinlik adı: Sepeti görüntüleme
-                @params = new
-                {
-                    currency = "TRY",
-                    value = cartDto.CartTotalAmount, // Senin 28. satırda hesapladığın toplam tutar
-                    items = cartDto.CartItems.Select(item => new
-                    {
-                        item_id = item.ProductId.ToString(),
-                        item_name = item.ProductName,
-                        price = item.Price,
-                        quantity = item.Quantity
-                    }).ToArray() // Senin Dto'ndaki listeyi GA4'ün beklediği formata çeviriyoruz
-                }
-            }
-        }
-                };
+                    //Filler
+                    excel_basket = "",
+                    affiliation = "",
+                    coupon = "",
+                    discount = "",
+                    item_brand = "",
+                    item_category = "",
+                    item_category2 = "",
+                    item_category3 = "",
+                    item_list_id = "",
+                    item_list_name = "",
+                    item_variant = "",
+                    kdv_price = 0.0m,
+                    in_stock = false,
+                    stock_limit = "",
+                    order_limit = "",
+                }).ToArray()
+            }, HttpContext, currentUserId.ToString());
 
-                string measurementId = "G-X8H3TG9MKJ"; // Kendi kimliğini yaz
-                string apiSecret = "ckq2ILLbQnmfSOn_9vrRQQ";       // Kendi gizli anahtarını yaz
-
-                // Canlı URL'yi kullanıyoruz
-                string ga4Url = $"https://www.google-analytics.com/mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
-
-                try
-                {
-                    var client = _httpClientFactory.CreateClient();
-                    await client.PostAsJsonAsync(ga4Url, ga4Payload);
-                }
-                catch (Exception)
-                {
-                    // Analitik hatası sepetin görüntülenmesini engellemesin
-                }
-            }
-            // --- GA4 ENTEGRASYONU BİTİŞİ ---
             return View(cartDto);
         }
 
@@ -149,60 +132,39 @@ namespace WebUI.Controllers
                 _cartItemService.Add(newCartItem);
             }
 
-            // --- GA4 ADD_TO_CART ENTEGRASYONU BAŞLANGICI ---
-            string clientId = Guid.NewGuid().ToString();
-            if (Request.Cookies.TryGetValue("_ga", out string? gaCookie))
+            await _gaService.TrackEventAsync("add_to_cart", new 
             {
-                var cookieParts = gaCookie.Split('.');
-                if (cookieParts.Length >= 4)
+                debug_mode = 1,
+                currency = "TRY",
+                price = product.Price,
+                items = new[]
                 {
-                    clientId = $"{cookieParts[2]}.{cookieParts[3]}";
+                    new
+                    {
+                        item_id = product.Id.ToString(),
+                        item_name = product.Name,
+                        price = product.Price,
+                        quantity = 1, 
+                        index = 0, 
+
+                        // Filler
+                        affiliation = "",
+                        coupon = "",
+                        discount = 0.0m, 
+                        item_brand = "",
+                        item_category = "",
+                        item_category2 = "",
+                        item_category3 = "",
+                        item_list_id = "",
+                        item_list_name = "",
+                        item_variant = "",
+                        kdv_price = 0.0m, 
+                        in_stock = false, 
+                        stock_limit = "", 
+                        order_limit = ""  
+                    }
                 }
-            }
-
-            var ga4Payload = new
-            {
-                client_id = clientId,
-                events = new[]
-                {
-                     new
-                     {
-                        name = "add_to_cart", // Sepete ekleme etkinliği
-                        @params = new
-                        {
-                            currency = "TRY",
-                            value = product.Price, // Eklenen ürünün fiyatı
-                            items = new[]
-                            {
-                                new
-                                {
-                                    item_id = product.Id.ToString(),
-                                    item_name = product.Name,
-                                    price = product.Price,
-                                    quantity = 1 // Bu metot her çalıştığında ürün 1 adet ekleniyor/artırılıyor
-                                }
-                            }
-                        }
-                     }
-                }
-            };
-
-            string measurementId = "G-X8H3TG9MKJ"; // Senin kimliğin
-            string apiSecret = "ckq2ILLbQnmfSOn_9vrRQQ";       // Senin gizli anahtarın
-
-            // Canlıya alırken "debug/" kısmını silmeyi unutma
-            string ga4Url = $"https://www.google-analytics.com/mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
-
-            try
-            {
-                var client = _httpClientFactory.CreateClient();
-                var response = await client.PostAsJsonAsync(ga4Url, ga4Payload);
-            }
-            catch (Exception)
-            {
-                // Hata durumunda müşterinin sepet işlemi kesintiye uğramasın
-            }
-            // --- GA4 ENTEGRASYONU BİTİŞİ ---
+            }, HttpContext, currentUserId.ToString());
 
             return RedirectToAction("Index");
         }
@@ -256,54 +218,51 @@ namespace WebUI.Controllers
                 _cartItemService.Delete(item);
             }
 
-            // --- GA4 MEASUREMENT PROTOCOL ENTEGRASYONU BAŞLANGICI ---
 
-            string clientId = Guid.NewGuid().ToString();
-            if (Request.Cookies.TryGetValue("_ga", out string? gaCookie))
+            await _gaService.TrackEventAsync("purchase", new
             {
-                var cookieParts = gaCookie.Split('.');
-                if (cookieParts.Length >= 4)
+                debug_mode = 1,
+                transaction_id = newOrder.Id.ToString(), 
+                currency = "TRY",
+                value = totalOrderPrice, 
+
+                kdv_exclude_value = 0.0m,
+                coupon = "",
+                sending_date = "",
+                routine_order = false, 
+                sas_no = "",
+                shipping_tier = "",
+                items = cartItems.Select((item, i) =>
                 {
-                    clientId = $"{cookieParts[2]}.{cookieParts[3]}";
-                }
-            }
+                    var product = allProducts.FirstOrDefault(p => p.Id == item.ProductId);
 
-            var ga4Payload = new
-            {
-                client_id = clientId,
-                events = new[]
-                {
-        new
-        {
-            name = "purchase",
-            @params = new
-            {
-                // Görseldeki senin "newOrder" değişkeninden ID ve Toplam Fiyatı alıyoruz
-                transaction_id = newOrder.Id.ToString(),
-                value = newOrder.TotalPrice,
-                currency = "TRY"
-            }
-        }
-    }
-            };
+                    return new
+                    {
+                        item_id = item.ProductId.ToString(),
+                        item_name = product != null ? product.Name : "Bilinmeyen Ürün",
+                        price = product != null ? product.Price : 0,
+                        quantity = item.Quantity,
+                        index = i,
 
-            string measurementId = "G-X8H3TG9MKJ"; // Panelden aldığın kimlik
-            string apiSecret = "ckq2ILLbQnmfSOn_9vrRQQ";       // Panelden oluşturduğun gizli anahtar
-
-            // Test için debug endpoint'i
-            string ga4Url = $"https://www.google-analytics.com/mp/collect?measurement_id={measurementId}&api_secret={apiSecret}";
-
-            try
-            {
-                // CartController'ın constructor'ına IHttpClientFactory eklemeyi unutma!
-                var client = _httpClientFactory.CreateClient();
-                var response = await client.PostAsJsonAsync(ga4Url, ga4Payload);
-            }
-            catch (Exception)
-            {
-                // Analitik hatası müşterinin siparişini bozmasın diye sessizce yakalıyoruz
-            }
-
+                        // Sonradan Doldurulacak Ürün Parametreleri
+                        excel_basket = "",
+                        affiliation = "",
+                        coupon = "",
+                        discount = 0.0m,
+                        item_brand = "",
+                        item_category = "",
+                        item_category2 = "",
+                        item_category3 = "",
+                        item_list_id = "",
+                        item_list_name = "",
+                        item_variant = "",
+                        kdv_price = 0.0m,
+                        in_stock = false,
+                        stock_limit = "",
+                        order_limit = ""
+                    };
+                }).ToArray()
+            }, HttpContext, currentUserId.ToString());
 
             return RedirectToAction("Index");
         }

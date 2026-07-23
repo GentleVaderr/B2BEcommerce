@@ -16,6 +16,7 @@ builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<IUserService, UserManager>();
 builder.Services.AddScoped<IOrderDetailService, OrderDetailManager>();
 builder.Services.AddScoped<ICartItemService, CartItemManager>();
+builder.Services.AddScoped<IGoogleAnalyticsService, GoogleAnalyticsService>();
 
 builder.Services.AddScoped<IOrderDal, EfOrderDal>();
 builder.Services.AddScoped<IProductDal, EfProductDal>();
